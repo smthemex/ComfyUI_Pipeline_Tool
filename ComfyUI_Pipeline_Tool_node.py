@@ -24,6 +24,7 @@ class Pipeline_Tool:
                                     "pth","safetensors,bin,pth","model","msgpack","onnx_data","onnx",],),
                 "max_workers": ("INT", {"default": 4, "min": 1, "max": 8, "step": 1, "display": "slider"}),
                 "download_single_file": ("STRING",{"default": ""}),
+                "use_default_cache_dir":("BOOLEAN", {"default": False},),
                 "get_model_online": ("BOOLEAN", {"default": False},)
             }
         }
@@ -34,17 +35,22 @@ class Pipeline_Tool:
     CATEGORY = "Pipeline_Tool"
 
     def pipeline_tool(self, repo_id, local_dir, local_dir_use_symlinks,
-                      ignore_patterns, max_workers, download_single_file,get_model_online):
+                      ignore_patterns, max_workers, download_single_file,use_default_cache_dir,get_model_online):
 
-        path_dir = os.path.dirname(dir_path)
-        path = os.path.dirname(path_dir)
         get_model_online = get_model_online
-        repo_list = repo_id.split('/')
-        dir_list = local_dir.split('/')
+        if use_default_cache_dir:
+            cache_dir = None
+            model_path =None
+            local_dir_use_symlinks =True
+        else:
+            path_dir = os.path.dirname(dir_path)
+            path = os.path.dirname(path_dir)
+            repo_list = repo_id.split('/')
+            dir_list = local_dir.split('/')
+            path = os.path.join(path, f"{dir_list[0]}", f"{dir_list[1]}", f"{repo_list[0]}", f"{repo_list[1]}")
+            cache_dir = os.path.join(path, "cache")
+            model_path = os.path.normpath(path)
 
-        path = os.path.join(path, f"{dir_list[0]}", f"{dir_list[1]}", f"{repo_list[0]}", f"{repo_list[1]}")
-        cache_dir = os.path.join(path,"cache")
-        model_path = os.path.normpath(path)
         if ignore_patterns == "none":
             ignore_patterns = None
         elif ignore_patterns == "big_files":
@@ -67,7 +73,6 @@ class Pipeline_Tool:
             ignore_patterns = ["*.onnx_data"]
         elif ignore_patterns == "onnx":
             ignore_patterns = ["*.onnx"]
-
 
         s = len(download_single_file)
         if s > 0:
