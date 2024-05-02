@@ -14,7 +14,11 @@ A simple download tool for using pipeline in comfyUI
 repo_id的格式是xxxxx/xxxxx，填错就用不了。  
 get_model_online按钮是连我其他节点的，输出为布尔值的False,不用连什么。。。  
 
-用法一
+用法一  
+-----
+推荐用新的cli方法，不用每次都要开启comfyUI再下载。详细使用方法，看cli_example（不开启comfyUI下载命令示例）.txt的内容。   
+
+用法二
 ----
 
 只需填写repo_id,一键下载该模型的所有文件到comfyUI的models/diffuses 文件目录下。  
@@ -30,7 +34,7 @@ get_model_online按钮是连我其他节点的，输出为布尔值的False,不�
 
 调用的方法，就是填写改模型的绝对路径。
 
-用法二
+用法三
 ----
 下载单一的文件，只需要填写repo_id并在get_single_model填写你需要的模型名，就可以下载，输出文本为模型地址  
 
