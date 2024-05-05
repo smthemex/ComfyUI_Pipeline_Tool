@@ -21,7 +21,7 @@ ignore_patterns = args.ignore_patterns
 filename = args.filename
 
 
-if ignore_patterns == "none":
+if ignore_patterns == "":
     ignore_patterns = None
 elif ignore_patterns == "big_files":
     ignore_patterns = ["*.safetensors", "*.bin", "*.pth", "*.model", "*.msgpack", "*.onnx_data", "*.onnx", "*.xml"]
@@ -44,23 +44,28 @@ elif ignore_patterns == "onnx_data":
 elif ignore_patterns == "onnx":
     ignore_patterns = ["*.onnx"]
 
-path_dir = os.path.dirname(dir_path)
-path = os.path.dirname(path_dir)
-
-repo_list = repo_id.split('/')
-dir_list = local_dir.split('/')
-path = os.path.join(path, f"{dir_list[0]}", f"{dir_list[1]}", f"{repo_list[0]}", f"{repo_list[1]}")
-cache_dir = os.path.join(path, "cache")
-model_path = os.path.normpath(path)
+if local_dir == "":
+    cache_dir = None
+    model_path = None
+    local_dir_use_symlinks = True
+else:
+    path_dir = os.path.dirname(dir_path)
+    path = os.path.dirname(path_dir)
+    repo_list = repo_id.split('/')
+    dir_list = local_dir.split('/')
+    path = os.path.join(path, f"{dir_list[0]}", f"{dir_list[1]}", f"{repo_list[0]}", f"{repo_list[1]}")
+    cache_dir = os.path.join(path, "cache")
+    model_path = os.path.normpath(path)
+    local_dir_use_symlinks = False
 
 s = len(filename)
 if s > 0:
     get_model_path = hf_hub_download(repo_id=repo_id, filename=filename,cache_dir=cache_dir,
-                                     local_dir=model_path,local_dir_use_symlinks=False, resume_download=True
+                                     local_dir=model_path,local_dir_use_symlinks=local_dir_use_symlinks, resume_download=True
                                      )
 else:
     download_model = snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=model_path,
-                                       local_dir_use_symlinks=False,
+                                       local_dir_use_symlinks=local_dir_use_symlinks,
                                        ignore_patterns=ignore_patterns,
                                        max_workers = 4
                                        )
