@@ -7,6 +7,8 @@ A simple download tool for using pipeline in comfyUI
 
 但是当我发现用pipeline测试模型足够多的时候，我的C盘快爆掉。  我后悔没有重设缓存区，所以就把抱脸的下载库做成comfy的节点。  
 
+当local_dir为空时，默认开启symlinks.
+
 插件直接内置镜像站，所以镜像站有的都能下载，除非要tokens的，这个会用的也不会用我这个节点了
 
 注意：
