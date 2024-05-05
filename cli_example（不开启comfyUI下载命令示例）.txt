@@ -33,4 +33,6 @@ X:/ComfyUI_windows/python_embeded/python X:/ComfyUI_windows/ComfyUI/custom_nodes
 X:/ComfyUI_windows/python_embeded/python X:/ComfyUI_windows/ComfyUI/custom_nodes/ComfyUI_Pipeline_Tool/download-cli.py --repo_id "smthem/test-model" --local_dir "models/diffusers" --ignore_patterns  ""  --filename "这里填写你要下载的模型名称含后缀"
 
 -------------注意------------
-ignore_patterns，忽略下载的常用模型名："big_files"，"bin"，"safetensors"，"safetensors,bin"，"pth"，"safetensors,bin,pth"，"model"，"msgpack"，"onnx_data"，"onnx"
+一、ignore_patterns，忽略下载的常用模型名："big_files"，"bin"，"safetensors"，"safetensors,bin"，"pth"，"safetensors,bin,pth"，"model"，"msgpack"，"onnx_data"，"onnx"
+
+二、local_dir 为空时，默认下载到C盘并开启symlinks，示例  python download-cli.py --repo_id "smthem/test-model" --local_dir "" --ignore_patterns  ""  --filename ""
