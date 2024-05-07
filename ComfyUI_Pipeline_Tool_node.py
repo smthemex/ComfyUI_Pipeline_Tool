@@ -23,7 +23,7 @@ class Pipeline_Tool:
                 "ignore_patterns": (["none","big_files","safetensors","bin","safetensors,bin",
                                     "pth","safetensors,bin,pth","model","msgpack","onnx_data","onnx",],),
                 "max_workers": ("INT", {"default": 4, "min": 1, "max": 8, "step": 1, "display": "slider"}),
-                "download_single_file": ("STRING",{"default": ""}),
+                "download_single_file": ("STRING",{"default": "None"}),
                 "use_default_cache_dir":("BOOLEAN", {"default": False},),
                 "get_model_online": ("BOOLEAN", {"default": False},)
             }
@@ -51,10 +51,8 @@ class Pipeline_Tool:
             cache_dir = os.path.join(path, "cache")
             model_path = os.path.normpath(path)
 
-        if ignore_patterns == "none":
-            ignore_patterns = None
-        elif ignore_patterns == "big_files":
-            ignore_patterns = ["*.safetensors", "*.bin","*.pth","*.model","*.msgpack","*.onnx_data","*.onnx","*.xml"]
+        if ignore_patterns == "big_files":
+            ignore_patterns = ["*.safetensors", "*.bin","*.pth","*.model","*.msgpack","*.onnx_data","*.onnx","*.gguf","*.xml"]
         elif ignore_patterns == "safetensors":
             ignore_patterns = ["*.safetensors"]
         elif ignore_patterns == "bin":
@@ -73,6 +71,8 @@ class Pipeline_Tool:
             ignore_patterns = ["*.onnx_data"]
         elif ignore_patterns == "onnx":
             ignore_patterns = ["*.onnx"]
+        else:
+            ignore_patterns = None
 
         s = len(download_single_file)
         if s > 0:
