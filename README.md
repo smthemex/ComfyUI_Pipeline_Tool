@@ -9,7 +9,7 @@ A simple download tool for using pipeline in comfyUI
 
 当local_dir为空时，默认开启symlinks.
 
-插件直接内置镜像站，所以镜像站有的都能下载，除非要tokens的，这个会用的也不会用我这个节点了
+插件直接内置镜像站，所以镜像站有的都能下载，需要token的请用cli方法，在命令行末尾加上--token "你申请到的token"     
 
 注意：
 -----
