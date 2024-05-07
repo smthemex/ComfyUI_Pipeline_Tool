@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description="Download the huggingface model.")
 
 parser.add_argument("-r", "--repo_id", type=str, default="smthem/test-model")
 parser.add_argument("-l", "--local_dir", type=str, default="models/diffusers")
-parser.add_argument("-i", "--ignore_patterns", type=str, default="")
+parser.add_argument("-i", "--ignore_patterns", type=str, default="None")
 parser.add_argument("-f", "--filename", type=str, default="")
 
 args = parser.parse_args()
@@ -20,11 +20,8 @@ local_dir = args.local_dir
 ignore_patterns = args.ignore_patterns
 filename = args.filename
 
-
-if ignore_patterns == "":
-    ignore_patterns = None
-elif ignore_patterns == "big_files":
-    ignore_patterns = ["*.safetensors", "*.bin", "*.pth", "*.model", "*.msgpack", "*.onnx_data", "*.onnx", "*.xml"]
+if ignore_patterns == "big_files":
+    ignore_patterns = ["*.safetensors", "*.bin", "*.pth", "*.model", "*.msgpack", "*.onnx_data", "*.onnx", "*.gguf","*.xml"]
 elif ignore_patterns == "safetensors":
     ignore_patterns = ["*.safetensors"]
 elif ignore_patterns == "bin":
@@ -43,6 +40,8 @@ elif ignore_patterns == "onnx_data":
     ignore_patterns = ["*.onnx_data"]
 elif ignore_patterns == "onnx":
     ignore_patterns = ["*.onnx"]
+else:
+    ignore_patterns = None
 
 if local_dir == "":
     cache_dir = None
