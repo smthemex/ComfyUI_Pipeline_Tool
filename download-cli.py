@@ -13,12 +13,15 @@ parser.add_argument("-r", "--repo_id", type=str, default="smthem/test-model")
 parser.add_argument("-l", "--local_dir", type=str, default="models/diffusers")
 parser.add_argument("-i", "--ignore_patterns", type=str, default="None")
 parser.add_argument("-f", "--filename", type=str, default="")
+parser.add_argument("-t", "--token", type=str, default="")
+
 
 args = parser.parse_args()
 repo_id = args.repo_id
 local_dir = args.local_dir
 ignore_patterns = args.ignore_patterns
 filename = args.filename
+token = args.token
 
 if ignore_patterns == "big_files":
     ignore_patterns = ["*.safetensors", "*.bin", "*.pth", "*.model", "*.msgpack", "*.onnx_data", "*.onnx", "*.gguf","*.xml"]
@@ -60,11 +63,12 @@ else:
 s = len(filename)
 if s > 0:
     get_model_path = hf_hub_download(repo_id=repo_id, filename=filename,cache_dir=cache_dir,
-                                     local_dir=model_path,local_dir_use_symlinks=local_dir_use_symlinks, resume_download=True
+                                     local_dir=model_path,local_dir_use_symlinks=local_dir_use_symlinks, resume_download=True,token=token
                                      )
 else:
     download_model = snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=model_path,
                                        local_dir_use_symlinks=local_dir_use_symlinks,
+                                       token=token,
                                        ignore_patterns=ignore_patterns,
                                        max_workers = 4
                                        )
