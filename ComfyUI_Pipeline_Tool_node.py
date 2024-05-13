@@ -19,7 +19,7 @@ class Pipeline_Tool:
                 "ignore_patterns": (["none", "big_files", "safetensors", "bin", "safetensors,bin",
                                      "pth", "safetensors,bin,pth", "model", "msgpack", "onnx_data", "onnx", ],),
                 "max_workers": ("INT", {"default": 4, "min": 1, "max": 8, "step": 1, "display": "slider"}),
-                "download_single_file": ("STRING", {"default": "None"}),
+                "download_single_file": ("STRING", {"default": ""}),
                 "use_default_cache_dir": ("BOOLEAN", {"default": False},)
             }
         }
