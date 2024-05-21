@@ -49,7 +49,7 @@ class Pipeline_Tool:
             ignore_patterns = None
         elif ignore_patterns == "big_files":
             ignore_patterns = ["*.safetensors", "*.bin", "*.pth", "*.model", "*.msgpack", "*.onnx_data", "*.onnx",
-                               "*.gguf", "*.xml"]
+                               "*.gguf","*.ckpt", "*.xml"]
         elif ignore_patterns == "safetensors":
             ignore_patterns = ["*.safetensors"]
         elif ignore_patterns == "bin":
