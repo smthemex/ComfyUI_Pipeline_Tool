@@ -2,9 +2,10 @@
 # -*- coding: UTF-8 -*-
 
 import os
-
+import pkg_resources
 dir_path = os.path.dirname(os.path.abspath(__file__))
-
+hub_version = pkg_resources.get_distribution('huggingface_hub').version
+hub_version = float(hub_version.split(".", 1)[-1])
 
 class Pipeline_Tool:
     def __init__(self):
@@ -31,20 +32,6 @@ class Pipeline_Tool:
 
     def pipeline_tool(self, repo_id, local_dir,
                       ignore_patterns, max_workers, download_single_file, use_default_cache_dir):
-        if use_default_cache_dir == True:
-            cache_dir = None
-            local_dir = None
-            local_dir_use_symlinks = True
-        else:
-            local_dir_use_symlinks = False
-            path_dir = os.path.dirname(dir_path)
-            path = os.path.dirname(path_dir)
-            repo_list = repo_id.split('/')
-            dir_list = local_dir.split('/')
-            path = os.path.join(path, f"{dir_list[0]}", f"{dir_list[1]}", f"{repo_list[0]}", f"{repo_list[1]}")
-            cache_dir = os.path.join(path, "cache")
-            local_dir = os.path.normpath(path)
-
         if ignore_patterns == "none":
             ignore_patterns = None
         elif ignore_patterns == "big_files":
@@ -68,25 +55,80 @@ class Pipeline_Tool:
             ignore_patterns = ["*.onnx_data"]
         else:
             ignore_patterns = ["*.onnx"]
-
-        s = len(download_single_file)
-        if s > 0:
-            os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-            from huggingface_hub import hf_hub_download
-            model_path = hf_hub_download(repo_id=repo_id, filename=download_single_file, cache_dir=cache_dir,
+            
+        if hub_version >= 23.0:  # 0.23.0 delete local_dir_use_symlinks option
+            if use_default_cache_dir == True:
+                os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+                os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
+                from huggingface_hub import snapshot_download
+                model_path = snapshot_download(repo_id=repo_id, max_workers=max_workers
+                                               )
+                return (model_path,)
+            else:
+                path_dir = os.path.dirname(dir_path)
+                path = os.path.dirname(path_dir)
+                repo_list = repo_id.split('/')
+                dir_list = local_dir.split('/')
+                path = os.path.join(path, f"{dir_list[0]}", f"{dir_list[1]}", f"{repo_list[0]}", f"{repo_list[1]}")
+                cache_dir = os.path.join(path, "cache")
+                local_dir = os.path.normpath(path)
+            if len(download_single_file) > 0:
+                os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+                os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
+                from huggingface_hub import hf_hub_download
+                model_path = hf_hub_download(repo_id=repo_id, filename=download_single_file, cache_dir=cache_dir,
+                                         local_dir=local_dir,
+                                         resume_download=True
+                                         )
+                return (model_path,)
+            else:
+                os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+                os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
+                from huggingface_hub import snapshot_download
+                model_path = snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=local_dir,
+                                           ignore_patterns=ignore_patterns,
+                                           max_workers=max_workers
+                                           )
+                return (model_path,)
+        else:
+            if use_default_cache_dir == True:
+                os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+                os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
+                from huggingface_hub import snapshot_download
+                cache_dir = None
+                model_path = None
+                local_dir_use_symlinks = True
+                model_path = snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=model_path,max_workers=max_workers,local_dir_use_symlinks=local_dir_use_symlinks,
+                                               )
+                return (model_path,)
+            else:
+                local_dir_use_symlinks = False
+                path_dir = os.path.dirname(dir_path)
+                path = os.path.dirname(path_dir)
+                repo_list = repo_id.split('/')
+                dir_list = local_dir.split('/')
+                path = os.path.join(path, f"{dir_list[0]}", f"{dir_list[1]}", f"{repo_list[0]}", f"{repo_list[1]}")
+                cache_dir = os.path.join(path, "cache")
+                local_dir = os.path.normpath(path)
+            if len(download_single_file) > 0:
+                os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+                os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
+                from huggingface_hub import hf_hub_download
+                model_path = hf_hub_download(repo_id=repo_id, filename=download_single_file, cache_dir=cache_dir,
                                          local_dir=local_dir,
                                          local_dir_use_symlinks=local_dir_use_symlinks, resume_download=True
                                          )
-            return (model_path,)
-        else:
-            os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-            from huggingface_hub import snapshot_download
-            model_path = snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=local_dir,
+                return (model_path,)
+            else:
+                os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+                os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
+                from huggingface_hub import snapshot_download
+                model_path = snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=local_dir,
                                            local_dir_use_symlinks=local_dir_use_symlinks,
                                            ignore_patterns=ignore_patterns,
                                            max_workers=max_workers
                                            )
-            return (model_path,)
+                return (model_path,)
 
 
 NODE_CLASS_MAPPINGS = {
