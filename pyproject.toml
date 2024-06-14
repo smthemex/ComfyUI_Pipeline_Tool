@@ -1,0 +1,14 @@
+[project]
+name = "comfyui_pipeline_tool"
+description = "A tool for novice users in Chinese Mainland to call the huggingface hub and download the huggingface models."
+version = "1.0.0"
+license = "LICENSE"
+
+[project.urls]
+Repository = "https://github.com/smthemex/ComfyUI_Pipeline_Tool"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI_Pipeline_Tool"
+Icon = ""
