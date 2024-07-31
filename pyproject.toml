@@ -2,7 +2,7 @@
 name = "comfyui_pipeline_tool"
 description = "a node for easy using hub pipe"
 version = "1.0.0"
-license = "LICENSE"
+license = { file = "LICENSE" }
 
 [project.urls]
 Repository = "https://github.com/smthemex/ComfyUI_Pipeline_Tool"
