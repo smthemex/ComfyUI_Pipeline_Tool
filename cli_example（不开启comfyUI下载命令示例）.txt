@@ -1,24 +1,23 @@
 ----------如果你使用的不是离线版的ComfyUI-------------
 
-1、只下载非模型文件，CMD运行以下代码(将smthem/test-model替换成你要下载的repo id），（下载地址默认是models/diffusers，建议别改)：
+1、只下载非模型文件，CMD运行以下代码(将smthem/test-model替换成你要下载的repo id），（下载地址默认是comfyui/models/diffusers，建议别改)：
 
-python download-cli.py --repo_id "smthem/test-model" --local_dir "models/diffusers" --ignore_patterns  "big_files"  --filename ""
+python download-cli.py --repo_id "smthem/test-model" --local_dir "diffusers"  --ignore_patterns  "big_files"  --filename "" 
 
 
 2、全部都下载，复制代码CMD运行以下代码(将smthem/test-model替换成你要下载的repo id），（下载地址默认是models/diffusers，建议别改)：
 
-python download-cli.py --repo_id "smthem/test-model" --local_dir "models/diffusers" --ignore_patterns  "None"  --filename ""
+python download-cli.py --repo_id "smthem/test-model" --local_dir "models/diffusers"  --ignore_patterns  "None"  --filename ""
 
 
 3、单文件下载，CMD运行以下代码(将smthem/test-model替换成你要下载的repo id），（下载地址默认是models/diffusers，建议别改)：
 
-python download-cli.py --repo_id "smthem/test-model" --local_dir "models/diffusers" --ignore_patterns  "None"  --filename "这里填写你要下载的模型名称含后缀"
+python download-cli.py --repo_id "smthem/test-model" --local_dir "models/diffusers"  --ignore_patterns  "None"  --filename "这里填写你要下载的模型名称含后缀"
 
 
+---------如果你使用的是便携版的ComfyUI -----------
 
----------如果你使用的是离线版的ComfyUI（比如秋叶，铁锅炖，或则官方的离线包）-----------
-
-1、只下载非模型文件，将下面的命令行内的X:/ComfyUI_windows/python_embeded/python和X:/ComfyUI_windows/ComfyUI/custom_nodes/改成你的实际目录，在pipeline_Tool 插件包里，打开CMD运行以下代码(将smthem/test-model替换成你要下载的repo id，下载地址默认是models/diffusers，建议别改)：
+1、只下载非模型文件，将下面的命令行内的"X:/ComfyUI_windows/python_embeded/python"和"X:/ComfyUI_windows/ComfyUI/custom_nodes/"改成你的实际目录，在pipeline_Tool 插件包里，打开CMD运行以下代码(将smthem/test-model替换成你要下载的repo id，下载地址默认是comfyui/models/diffusers，建议别改)：
 
 X:/ComfyUI_windows/python_embeded/python  X:/ComfyUI_windows/ComfyUI/custom_nodes/ComfyUI_Pipeline_Tool/download-cli.py --repo_id "smthem/test-model" --local_dir "models/diffusers" --ignore_patterns  "big_files"  --filename ""
 
