@@ -1,6 +1,10 @@
 A simple download tool for using pipeline in comfyUI   
 
-2024-06-05 更新
+2024-08-03 更新
+--加入魔搭支持，只要模型找得到，速度可以拉满。
+安装方式，pip install modelscope
+
+--既往更新
 加入0.23.0以上版本的内容   
 这个版本不再需要local_dir_use_symlinks 这个属性，也支持LLM模型的下载    。  
 
@@ -29,8 +33,7 @@ repo_id的格式是xxxxx/xxxxx，填错就用不了。
 只需填写repo_id,一键下载该模型的所有文件到comfyUI的models/diffuses 文件目录下。  
 
 此法类同于直接在抱脸直接下载，好处是文件结构给你理好了。
-
-注意————symlinks一定要是关闭的，不然是blobs模式。当然，你喜欢blobs模式且只有个C盘，我建议开启symlinks，用于节省空间。  （0.23。0以后这个没有了）     
+    
 注意————因为有些模型库文件超级多，超级大，所以建议在ignore_patterns 选择big_files模式，先只下载小文件和结构，然后用“用法二”下载对应的文件。    
 注意————ignore_patterns是不下载那些文件，所以要根据自己的需要来选。默认是none，也就是都下载。  
 注意————使用“用法一”时，get_single_model必须是空的才能用。
