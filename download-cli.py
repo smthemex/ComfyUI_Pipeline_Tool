@@ -103,13 +103,13 @@ else: #download_mode=="hg"
             cache_dir = os.path.join(local_dir, "cache")
             if filename and has_single_dot(filename):
                 hf_hub_download(repo_id=repo_id, filename=filename,
-                                cache_dir=cache_dir,
+                                cache_dir=cache_dir,token=token,
                                 local_dir=local_dir, resume_download=True
                                 )
             elif filename and not has_single_dot(filename):
                 raise "下载单体文件需要download_single_file填写的是文件名"
             else:
-                snapshot_download(repo_id, cache_dir=cache_dir, local_dir=local_dir,
+                snapshot_download(repo_id, cache_dir=cache_dir, local_dir=local_dir,token=token,
                                   ignore_patterns=ignore_patterns, max_workers=4)
         
     else:
