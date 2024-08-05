@@ -5,8 +5,6 @@ import os
 import re
 import sys
 import folder_paths
-
-diff_path=os.path.join(folder_paths.models_dir,"diffusers")
 models_path = folder_paths.models_dir
 base_path = folder_paths.base_path
 def get_instance_path(path):
@@ -14,9 +12,6 @@ def get_instance_path(path):
     if sys.platform == 'win32':
         instance_path = instance_path.replace('\\', "/")
     return instance_path
-
-def has_single_slash(s):
-    return bool(re.match(r'^/.$', s))
 
 def has_single_dot(s):
     return s.count('.') == 1
@@ -69,60 +64,55 @@ class Pipeline_Tool:
             ignore_patterns = ["*.onnx_data"]
         else:
             ignore_patterns = ["*.onnx"]
+        
+        if local_dir != "diffusers":
+            diff_path = os.path.join(models_path, local_dir)
+        else:
+            diff_path = os.path.join(models_path, "diffusers")
+        
         if use_modelscope: #魔塔下载
-            try:
-                if download_single_file and has_single_dot(download_single_file):
-                    from modelscope.hub.file_download import model_file_download
-                    model_path = model_file_download(model_id=repo_id,
-                                                     file_path=download_single_file,
-                                                     cache_dir=os.path.join(diff_path, repo_id, download_single_file),
-                                                     )
+            if download_single_file and has_single_dot(download_single_file):
+                from modelscope.hub.file_download import model_file_download
+                model_path = model_file_download(model_id=repo_id,
+                                                 file_path=download_single_file,
+                                                 local_dir=os.path.join(diff_path, repo_id, download_single_file),
+                                                 )
+                return (model_path,)
+            elif download_single_file and not has_single_dot(download_single_file):
+                raise "下载单体文件需要download_single_file填写的是文件名"
+            else:
+                from modelscope.hub.snapshot_download import snapshot_download as snapshot_download_mo
+                model_path = snapshot_download_mo(repo_id, local_dir=os.path.join(diff_path, repo_id),
+                                               ignore_file_pattern=ignore_patterns)
+                return (model_path,)
+        else:  #hub 下载
+            import huggingface_hub
+            hub_version = huggingface_hub.__version__
+            hub_version = int(hub_version.split(".")[1])
+            
+            
+            if hub_version >=23:
+                if huggingface_default_cache == True:
+                    os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
+                    os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
+                    from huggingface_hub import snapshot_download
+                    model_path = snapshot_download(repo_id=repo_id,  ignore_patterns=ignore_patterns,max_workers=max_workers)
+
                     return (model_path,)
-                elif download_single_file and not has_single_dot(download_single_file):
-                    raise "下载单体文件需要download_single_file填写的是文件名"
                 else:
-                    from modelscope.hub.snapshot_download import snapshot_download
-                    model_path = snapshot_download(repo_id, cache_dir=os.path.join(diff_path, repo_id),
-                                                   ignore_file_pattern=ignore_patterns)
-                    return (model_path,)
-            except:
-                print("改成hug下载")
-                try:
-                    if huggingface_default_cache == True:
+                    path = get_instance_path(os.path.join(diff_path, repo_id))
+                    cache_dir = os.path.join(path, "cache")
+                    local_dir = os.path.normpath(path)
+                    if download_single_file and has_single_dot(download_single_file):
                         os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
                         os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
-                        from huggingface_hub import snapshot_download
-                        if has_single_slash(repo_id):
-                            model_path = snapshot_download(repo_id=repo_id, ignore_patterns=ignore_patterns,
-                                                           max_workers=max_workers)
-                        else:
-                            raise "repo_id 需要填写为正确的XXX/XXX格式"
-                        return (model_path,)
-                    else:
-                        if local_dir and has_single_slash(repo_id):
-                            if local_dir == "diffusers":
-                                path = get_instance_path(os.path.join(diff_path, repo_id))
-                            else:
-                                path = get_instance_path(os.path.join(models_path, local_dir, repo_id))
-                        else:
-                            if has_single_slash(repo_id) and not local_dir:
-                                path = get_instance_path(os.path.join(diff_path, repo_id))
-                            else:
-                                raise "repo_id 需要填写为正确的XXX/XXX格式 "
-                        cache_dir = os.path.join(path, "cache")
-                        local_dir = os.path.normpath(path)
-                    if download_single_file and has_single_dot(download_single_file):
-                        if has_single_slash(repo_id):
-                            os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-                            os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
-                            from huggingface_hub import hf_hub_download
-                            model_path = hf_hub_download(repo_id=repo_id, filename=download_single_file,
-                                                         cache_dir=cache_dir,
-                                                         local_dir=local_dir,
-                                                         resume_download=True
-                                                         )
-                        else:
-                            raise "repo_id 需要填写为正确的XXX/XXX格式"
+                        from huggingface_hub import hf_hub_download
+                        model_path = hf_hub_download(repo_id=repo_id, filename=download_single_file,
+                                                     cache_dir=cache_dir,
+                                                     local_dir=local_dir,
+                                                     resume_download=True
+                                                     )
+
                         return (model_path,)
                     elif download_single_file and not has_single_dot(download_single_file):
                         raise "下载单体文件需要download_single_file填写的是文件名"
@@ -135,144 +125,25 @@ class Pipeline_Tool:
                                                        max_workers=max_workers
                                                        )
                         return (model_path,)
-                except:
-                    try:
-                        if huggingface_default_cache == True:
-                            os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-                            os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
-                            from huggingface_hub import snapshot_download
-                            cache_dir = None
-                            model_path = None
-                            local_dir_use_symlinks = True
-                            if has_single_slash(repo_id):
-                                model_path = snapshot_download(repo_id=repo_id, cache_dir=cache_dir,
-                                                               local_dir=model_path,
-                                                               max_workers=max_workers, ignore_patterns=ignore_patterns,
-                                                               local_dir_use_symlinks=local_dir_use_symlinks,
-                                                               )
-                            else:
-                                raise "repo_id 需要填写为正确的XXX/XXX格式"
-                            return (model_path,)
-                        else:
-                            local_dir_use_symlinks = False
-                            if local_dir and has_single_slash(repo_id):
-                                if local_dir == "diffusers":
-                                    path = get_instance_path(os.path.join(diff_path, repo_id))
-                                else:
-                                    path = get_instance_path(os.path.join(models_path, local_dir, repo_id))
-                            else:
-                                if has_single_slash(repo_id) and not local_dir:
-                                    path = get_instance_path(os.path.join(diff_path, repo_id))
-                                else:
-                                    raise "repo_id need "
-                            cache_dir = os.path.join(path, "cache")
-                            local_dir = os.path.normpath(path)
-                        if download_single_file and has_single_dot(download_single_file):
-                            os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-                            os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
-                            from huggingface_hub import hf_hub_download
-                            model_path = hf_hub_download(repo_id=repo_id, filename=download_single_file,
-                                                         cache_dir=cache_dir,
-                                                         local_dir=local_dir,
-                                                         local_dir_use_symlinks=local_dir_use_symlinks,
-                                                         resume_download=True
-                                                         )
-                            return (model_path,)
-                        elif download_single_file and not has_single_dot(download_single_file):
-                            raise "下载单体文件需要download_single_file填写的是文件名"
-                        else:
-                            os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-                            os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
-                            from huggingface_hub import snapshot_download
-                            model_path = snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=local_dir,
-                                                           local_dir_use_symlinks=local_dir_use_symlinks,
-                                                           ignore_patterns=ignore_patterns,
-                                                           max_workers=max_workers
-                                                           )
-                            return (model_path,)
-                    except:
-                        return("无法下载",)
                 
-            
-        else:  #hub 下载
-            try:
+            else:
                 if huggingface_default_cache == True:
                     os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
                     os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
                     from huggingface_hub import snapshot_download
-                    if has_single_slash(repo_id):
-                        model_path = snapshot_download(repo_id=repo_id,  ignore_patterns=ignore_patterns,max_workers=max_workers)
-                    else:
-                        raise "repo_id 需要填写为正确的XXX/XXX格式"
+                    cache_dir = None
+                    model_path = None
+                    local_dir_use_symlinks = True
+                    model_path = snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=model_path,
+                                                       max_workers=max_workers, ignore_patterns=ignore_patterns,
+                                                       local_dir_use_symlinks=local_dir_use_symlinks,
+                                                       )
                     return (model_path,)
                 else:
-                    if local_dir and has_single_slash(repo_id):
-                        if local_dir == "diffusers":
-                            path = get_instance_path(os.path.join(diff_path, repo_id))
-                        else:
-                            path = get_instance_path(os.path.join(models_path, local_dir, repo_id))
-                    else:
-                        if has_single_slash(repo_id) and not local_dir:
-                            path = get_instance_path(os.path.join(diff_path, repo_id))
-                        else:
-                            raise "repo_id 需要填写为正确的XXX/XXX格式 "
+                    local_dir_use_symlinks = False
+                    path = get_instance_path(os.path.join(diff_path, repo_id))
                     cache_dir = os.path.join(path, "cache")
                     local_dir = os.path.normpath(path)
-                if download_single_file and has_single_dot(download_single_file):
-                    if has_single_slash(repo_id):
-                        os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-                        os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
-                        from huggingface_hub import hf_hub_download
-                        model_path = hf_hub_download(repo_id=repo_id, filename=download_single_file,
-                                                     cache_dir=cache_dir,
-                                                     local_dir=local_dir,
-                                                     resume_download=True
-                                                     )
-                    else:
-                        raise "repo_id 需要填写为正确的XXX/XXX格式"
-                    return (model_path,)
-                elif download_single_file and not has_single_dot(download_single_file):
-                    raise "下载单体文件需要download_single_file填写的是文件名"
-                else:
-                    os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-                    os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
-                    from huggingface_hub import snapshot_download
-                    model_path = snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=local_dir,
-                                                   ignore_patterns=ignore_patterns,
-                                                   max_workers=max_workers
-                                                   )
-                    return (model_path,)
-            except:
-                try:
-                    if huggingface_default_cache == True:
-                        os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
-                        os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
-                        from huggingface_hub import snapshot_download
-                        cache_dir = None
-                        model_path = None
-                        local_dir_use_symlinks = True
-                        if has_single_slash(repo_id):
-                            model_path = snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=model_path,
-                                                           max_workers=max_workers, ignore_patterns=ignore_patterns,
-                                                           local_dir_use_symlinks=local_dir_use_symlinks,
-                                                           )
-                        else:
-                            raise "repo_id 需要填写为正确的XXX/XXX格式"
-                        return (model_path,)
-                    else:
-                        local_dir_use_symlinks = False
-                        if local_dir and has_single_slash(repo_id):
-                            if local_dir == "diffusers":
-                                path = get_instance_path(os.path.join(diff_path, repo_id))
-                            else:
-                                path = get_instance_path(os.path.join(models_path, local_dir, repo_id))
-                        else:
-                            if has_single_slash(repo_id) and not local_dir:
-                                path = get_instance_path(os.path.join(diff_path, repo_id))
-                            else:
-                                raise "repo_id need "
-                        cache_dir = os.path.join(path, "cache")
-                        local_dir = os.path.normpath(path)
                     if download_single_file and has_single_dot(download_single_file):
                         os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
                         os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
@@ -295,9 +166,6 @@ class Pipeline_Tool:
                                                        max_workers=max_workers
                                                        )
                         return (model_path,)
-                except:
-                    return ("无法下载",)
-            
             
 NODE_CLASS_MAPPINGS = {
     "Pipeline_Tool": Pipeline_Tool
