@@ -6,13 +6,8 @@ import os
 import re
 import sys
 
-
-def has_single_slash(s):
-    return bool(re.match(r'^/.$', s))
-
 def has_single_dot(s):
     return s.count('.') == 1
-
 def get_instance_path(path):
     instance_path = os.path.normpath(path)
     if sys.platform == 'win32':
@@ -21,20 +16,22 @@ def get_instance_path(path):
 
 os.environ['HF_ENDPOINT'] = 'https://hf-mirror.com'
 os.environ['_HF_DEFAULT_ENDPOINT'] = 'https://hf-mirror.com'
+
 from huggingface_hub import snapshot_download, hf_hub_download
+import huggingface_hub
+hub_version=huggingface_hub.__version__
+hub_version=int(hub_version.split(".")[1])
 
 cur_path = os.path.dirname(os.path.abspath(__file__))
 path_dir = os.path.dirname(cur_path)
 comfy_path = os.path.dirname(path_dir)
 
 models_path=os.path.join(comfy_path,"models")
-diff_path=os.path.join(models_path,"diffusers")
 
 parser = argparse.ArgumentParser(description="Download the huggingface or modelscope model.")
-
 parser.add_argument("-r", "--repo_id", type=str, default="smthem/test-model")
 parser.add_argument("-l", "--local_dir", type=str, default="diffusers")
-parser.add_argument("-m", "--mode", type=str, default="modelscope")
+parser.add_argument("-m", "--mode", type=str, default="hg")
 parser.add_argument("-i", "--ignore_patterns", type=str, default="None")
 parser.add_argument("-f", "--filename", type=str, default="")
 parser.add_argument("-t", "--token", type=str, default="")
@@ -71,43 +68,39 @@ elif ignore_patterns == "onnx":
 else:
     ignore_patterns = None
 
+if local_dir!="diffusers":
+    diff_path = os.path.join(models_path, local_dir)
+else:
+    diff_path=os.path.join(models_path,"diffusers")
 
-if download_mode=="modelscope":
+if download_mode=="ms":
     try:
         if filename and has_single_dot(filename):
             from modelscope.hub.file_download import model_file_download
             
             model_file_download(model_id=repo_id, file_path=filename,
-                                cache_dir=os.path.join(diff_path, repo_id, filename), )
+                                local_dir=os.path.join(diff_path, repo_id, filename), )
         
         elif filename and not has_single_dot(filename):
             print("下载单体文件需要download_single_file填写的是文件名")
             raise "error"
         else:
-            from modelscope.hub.snapshot_download import snapshot_download
+            from modelscope.hub.snapshot_download import snapshot_download as snapshot_download_mo
             
-            model_path = snapshot_download(repo_id, cache_dir=os.path.join(diff_path, repo_id),
+            snapshot_download_mo(repo_id, local_dir=diff_path,
                                            ignore_file_pattern=ignore_patterns)
     except:
-        print("改成hugging下载")
-        try:
-            if not local_dir:
-                cache_dir = None
-                model_path = None
-                download_model = snapshot_download(repo_id=repo_id, ignore_patterns=ignore_patterns, max_workers=4)
-            else:
-                if local_dir and has_single_slash(repo_id):
-                    if local_dir == "diffusers":
-                        path = get_instance_path(os.path.join(diff_path, repo_id))
-                    else:
-                        path = get_instance_path(os.path.join(models_path, local_dir, repo_id))
-                else:
-                    if has_single_slash(repo_id) and not local_dir:
-                        path = get_instance_path(os.path.join(diff_path, repo_id))
-                    else:
-                        raise "repo_id 需要填写为正确的XXX/XXX格式 "
-                cache_dir = os.path.join(path, "cache")
-                local_dir = os.path.normpath(path)
+        raise "error"
+        
+else: #download_mode=="hg"
+    if hub_version>=23:
+        if not local_dir:
+            cache_dir = None
+            model_path = None
+            download_model = snapshot_download(repo_id, ignore_patterns=ignore_patterns,max_workers=4)
+        else:
+            local_dir = os.path.join(diff_path, repo_id)
+            cache_dir = os.path.join(local_dir, "cache")
             if filename and has_single_dot(filename):
                 hf_hub_download(repo_id=repo_id, filename=filename,
                                 cache_dir=cache_dir,
@@ -116,119 +109,35 @@ if download_mode=="modelscope":
             elif filename and not has_single_dot(filename):
                 raise "下载单体文件需要download_single_file填写的是文件名"
             else:
-                snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=local_dir,
-                                  ignore_patterns=ignore_patterns, max_workers=4
-                                  )
-        except:
-            try:
-                if not local_dir:
-                    cache_dir = None
-                    model_path = None
-                    local_dir_use_symlinks = True
-                    snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=model_path,
-                                      local_dir_use_symlinks=local_dir_use_symlinks,
-                                      token=token,
-                                      ignore_patterns=ignore_patterns,
-                                      max_workers=4
-                                      )
-                else:
-                    if local_dir and has_single_slash(repo_id):
-                        if local_dir == "diffusers":
-                            path = get_instance_path(os.path.join(diff_path, repo_id))
-                        else:
-                            path = get_instance_path(os.path.join(models_path, local_dir, repo_id))
-                    else:
-                        if has_single_slash(repo_id) and not local_dir:
-                            path = get_instance_path(os.path.join(diff_path, repo_id))
-                        else:
-                            raise "repo_id 需要填写为正确的XXX/XXX格式 "
-                    cache_dir = os.path.join(path, "cache")
-                    local_dir = os.path.normpath(path)
-                    local_dir_use_symlinks = False
-                
-                if filename and has_single_dot(filename):
-                    hf_hub_download(repo_id=repo_id, filename=filename, cache_dir=cache_dir,
-                                    local_dir=local_dir, local_dir_use_symlinks=local_dir_use_symlinks,
-                                    resume_download=True, token=token
-                                    )
-                else:
-                    snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=local_dir,
-                                      local_dir_use_symlinks=local_dir_use_symlinks,
-                                      token=token,
-                                      ignore_patterns=ignore_patterns,
-                                      max_workers=4
-                                      )
-            except:
-                print("网络不通？")
-            
-else:
-    try:
+                snapshot_download(repo_id, cache_dir=cache_dir, local_dir=local_dir,
+                                  ignore_patterns=ignore_patterns, max_workers=4)
+        
+    else:
         if not local_dir:
             cache_dir = None
             model_path = None
-            download_model = snapshot_download(repo_id=repo_id, ignore_patterns=ignore_patterns,max_workers=4)
+            local_dir_use_symlinks = "auto"
+            snapshot_download(repo_id, cache_dir=cache_dir, local_dir=model_path,
+                                               local_dir_use_symlinks=local_dir_use_symlinks,
+                                               token=token,
+                                               ignore_patterns=ignore_patterns,
+                                               max_workers=4
+                                               )
         else:
-            if local_dir and has_single_slash(repo_id):
-                if local_dir == "diffusers":
-                    path = get_instance_path(os.path.join(diff_path, repo_id))
-                else:
-                    path = get_instance_path(os.path.join(models_path, local_dir, repo_id))
-            else:
-                if has_single_slash(repo_id) and not local_dir:
-                    path = get_instance_path(os.path.join(diff_path, repo_id))
-                else:
-                    raise "repo_id 需要填写为正确的XXX/XXX格式 "
+            path = get_instance_path(os.path.join(diff_path, repo_id))
             cache_dir = os.path.join(path, "cache")
             local_dir = os.path.normpath(path)
-        if filename and has_single_dot(filename):
-            hf_hub_download(repo_id=repo_id, filename=filename,
-                                         cache_dir=cache_dir,
-                                         local_dir=local_dir,resume_download=True
-                                         )
-        elif filename and not has_single_dot(filename):
-            raise "下载单体文件需要download_single_file填写的是文件名"
-        else:
-            snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=local_dir,
-                                           ignore_patterns=ignore_patterns,max_workers=4
-                                           )
-    except:
-        try:
-            if not local_dir:
-                cache_dir = None
-                model_path = None
-                local_dir_use_symlinks = True
-                snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=model_path,
-                                                   local_dir_use_symlinks=local_dir_use_symlinks,
-                                                   token=token,
-                                                   ignore_patterns=ignore_patterns,
-                                                   max_workers=4
-                                                   )
-            else:
-                if local_dir and has_single_slash(repo_id):
-                    if local_dir == "diffusers":
-                        path = get_instance_path(os.path.join(diff_path, repo_id))
-                    else:
-                        path = get_instance_path(os.path.join(models_path, local_dir, repo_id))
-                else:
-                    if has_single_slash(repo_id) and not local_dir:
-                        path = get_instance_path(os.path.join(diff_path, repo_id))
-                    else:
-                        raise "repo_id 需要填写为正确的XXX/XXX格式 "
-                cache_dir = os.path.join(path, "cache")
-                local_dir = os.path.normpath(path)
-                local_dir_use_symlinks = False
-            
+            local_dir_use_symlinks = False
             if filename and has_single_dot(filename):
-                hf_hub_download(repo_id=repo_id, filename=filename, cache_dir=cache_dir,
-                                                 local_dir=local_dir, local_dir_use_symlinks=local_dir_use_symlinks,
-                                                 resume_download=True, token=token
-                                                 )
+                hf_hub_download(repo_id, filename=filename, cache_dir=cache_dir,
+                                local_dir=local_dir, local_dir_use_symlinks=local_dir_use_symlinks,
+                                resume_download=True, token=token
+                                )
             else:
-                snapshot_download(repo_id=repo_id, cache_dir=cache_dir, local_dir=local_dir,
-                                                   local_dir_use_symlinks=local_dir_use_symlinks,
-                                                   token=token,
-                                                   ignore_patterns=ignore_patterns,
-                                                   max_workers=4
-                                                   )
-        except:
-            print("网络不通？")
+                snapshot_download(repo_id, cache_dir=cache_dir, local_dir=local_dir,
+                                  local_dir_use_symlinks=local_dir_use_symlinks,
+                                  token=token,
+                                  ignore_patterns=ignore_patterns,
+                                  max_workers=4
+                                  )
+            
